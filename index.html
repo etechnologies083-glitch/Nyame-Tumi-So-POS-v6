@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nyame Tumi So Enterprise — POS v3</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f7f8;color:#173042}
+header{background:#087f95;color:#fff;padding:11px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px}.brand img{width:52px;height:52px;border-radius:8px;object-fit:cover;background:#fff}.brand h1{font-size:19px;margin:0}.brand small{opacity:.9}
+nav{display:flex;gap:6px;padding:9px;background:#fff;border-bottom:1px solid #ddd;position:sticky;top:74px;z-index:19;overflow:auto}
+nav button{white-space:nowrap;background:#e9f0f2;border:0;border-radius:7px;padding:9px 12px;font-weight:700;cursor:pointer}.active{background:#087f95!important;color:#fff}
+main{max-width:1400px;margin:auto;padding:15px}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:1.35fr .85fr;gap:15px}.card{background:#fff;border-radius:12px;padding:15px;box-shadow:0 2px 10px #0001;margin-bottom:15px}
+h2,h3{margin-top:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input,select{width:100%;padding:10px;border:1px solid #cbd6da;border-radius:7px;margin:4px 0 9px;font-size:15px}button{cursor:pointer}
+.primary{background:#087f95;color:#fff;border:0;border-radius:7px;padding:9px 13px;font-weight:700}.orange{background:#f28c18;color:#fff;border:0;border-radius:7px;padding:10px 13px;font-weight:700}.danger{background:#b42318;color:#fff;border:0;border-radius:7px;padding:7px 9px}.secondary{background:#e9eef0;border:0;border-radius:7px;padding:8px 11px}
+.scan{font-size:19px;padding:14px;border:2px solid #b9d7dd}.products{max-height:510px;overflow:auto}
+.product{display:flex;gap:10px;align-items:center;border:1px solid #e1e7e9;border-radius:9px;padding:10px;margin:7px 0}.info{flex:1}.name{font-weight:700}.muted{font-size:12px;color:#66757c}.price{font-weight:700}
+.cartrow{display:grid;grid-template-columns:1fr auto auto auto;gap:7px;align-items:center;border-bottom:1px solid #eee;padding:9px 0}.qty button{padding:5px 9px;border:0;background:#e9eef0;border-radius:5px}
+.total{font-size:24px;font-weight:800;margin:14px 0}.checkout{width:100%;font-size:17px;padding:12px;background:#f28c18;color:#fff;border:0;border-radius:8px;font-weight:800}
+.notice{padding:10px;background:#edf8fa;border-left:4px solid #087f95;border-radius:7px;margin:8px 0}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.kpi{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 9px #0001}.kpi b{font-size:21px;display:block;margin-top:4px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid #e6eaec}th{background:#f1f5f6}
+.scroll{overflow:auto}.low{font-weight:800}.badge{padding:3px 7px;border-radius:12px;background:#e8f5e8;font-size:12px}.warn{background:#fff1d9}.empty{padding:20px;text-align:center;color:#718087}
+footer{text-align:center;color:#6b7b81;padding:18px;font-size:12px}
+@media(max-width:950px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr}nav{top:70px}}
+</style>
+</head>
+<body>
+<header>
+<div class="brand"><img src="shop-flyer.jpg" alt=""><div><h1>Nyame Tumi So Enterprise</h1><small>Wholesale Foodstuffs and Provisions • Kade</small></div></div>
+<div id="clock"></div>
+</header>
+<nav>
+<button class="active" onclick="page('dashboard',this)">Dashboard</button>
+<button onclick="page('pos',this)">POS</button>
+<button onclick="page('products',this)">Products</button>
+<button onclick="page('purchases',this)">Purchases</button>
+<button onclick="page('stock',this)">Stock</button>
+<button onclick="page('expenses',this)">Expenses</button>
+<button onclick="page('sales',this)">Sales</button>
+<button onclick="page('settings',this)">Settings</button>
+</nav>
+
+<main>
+<section id="dashboard" class="page active">
+<div class="kpis">
+<div class="kpi">Today Sales<b id="dToday">GH¢0.00</b></div>
+<div class="kpi">Transactions<b id="dTrans">0</b></div>
+<div class="kpi">Products<b id="dProducts">0</b></div>
+<div class="kpi">Low Stock<b id="dLow">0</b></div>
+<div class="kpi">Expenses<b id="dExpenses">GH¢0.00</b></div>
+</div>
+<div class="grid" style="margin-top:15px">
+<div class="card"><h2>Quick Actions</h2>
+<button class="orange" onclick="go('pos')">🛒 New Sale</button>
+<button class="primary" onclick="go('products')">＋ Add Product</button>
+<button class="secondary" onclick="go('purchases')">📦 Record Purchase</button>
+<button class="secondary" onclick="go('expenses')">💳 Add Expense</button>
+<div class="notice" style="margin-top:14px">📍 Kade opposite entrance of Kade station<br>☎ 0245690035 / 0556141002</div>
+</div>
+<div class="card"><h2>Low Stock</h2><div id="dLowList"></div></div>
+</div>
+</section>
+
+<section id="pos" class="page">
+<div class="grid"><div class="card"><h2>Point of Sale</h2>
+<input id="scan" class="scan" autofocus placeholder="Scan barcode or search product..." oninput="renderPOS()" onkeydown="scan(event)">
+<div id="posProducts" class="products"></div></div>
+<div class="card"><h2>Current Sale</h2><div id="cart"></div>
+<div class="total">Total: <span id="total">GH¢0.00</span></div>
+<label>Amount Paid</label><input id="paid" type="number" min="0" step=".01" oninput="calcChange()">
+<div class="notice">Change: <b id="change">GH¢0.00</b></div>
+<button class="checkout" onclick="checkout()">Complete Sale & Print Receipt</button>
+<button class="secondary" style="width:100%;margin-top:7px" onclick="clearCart()">Clear Sale</button>
+</div></div>
+</section>
+
+<section id="products" class="page"><div class="card"><h2>Product Management</h2>
+<div class="row"><div><label>Name</label><input id="pn"></div><div><label>Barcode</label><input id="pb"></div></div>
+<div class="row"><div><label>Selling price (GH¢)</label><input id="pp" type="number" min="0" step=".01"></div><div><label>Opening stock</label><input id="ps" type="number" min="0" step="1" value="0"></div></div>
+<label>Low-stock alert level</label><input id="plow" type="number" min="0" step="1" value="5">
+<button class="primary" onclick="saveProduct()">Save Product</button> <button class="secondary" onclick="resetProduct()">Cancel</button>
+</div>
+<div class="card"><input id="psearch" placeholder="Search product name or barcode..." oninput="renderProducts()"><div class="scroll" id="productTable"></div></div></section>
+
+<section id="purchases" class="page"><div class="card"><h2>Record Stock Purchase</h2>
+<div class="row"><div><label>Product</label><select id="buyProduct"></select></div><div><label>Quantity received</label><input id="buyQty" type="number" min="1" step="1"></div></div>
+<div class="row"><div><label>Cost per unit (GH¢) — optional</label><input id="buyCost" type="number" min="0" step=".01"></div><div><label>Supplier — optional</label><input id="buySupplier"></div></div>
+<button class="primary" onclick="recordPurchase()">Add Stock</button>
+<div id="purchaseHistory" style="margin-top:15px"></div></div></section>
+
+<section id="stock" class="page"><div class="card"><h2>Stock Overview</h2><div class="scroll" id="stockTable"></div></div></section>
+
+<section id="expenses" class="page"><div class="card"><h2>Expenses</h2>
+<div class="row"><div><label>Description</label><input id="expDesc" placeholder="Transport, electricity, etc."></div><div><label>Amount (GH¢)</label><input id="expAmt" type="number" min="0" step=".01"></div></div>
+<button class="primary" onclick="addExpense()">Save Expense</button><div id="expenseTable" style="margin-top:15px"></div></div></section>
+
+<section id="sales" class="page"><div class="card"><h2>Sales Reports</h2>
+<div class="row"><div><label>From</label><input id="fromDate" type="date" onchange="renderSales()"></div><div><label>To</label><input id="toDate" type="date" onchange="renderSales()"></div></div>
+<div id="salesSummary"></div><div class="scroll" id="salesTable"></div></div></section>
+
+<section id="settings" class="page"><div class="card"><h2>Shop Settings</h2>
+<div class="notice"><b>Nyame Tumi So Enterprise</b><br>Wholesale Foodstuffs and Provisions<br>Kade opposite entrance of Kade station<br>0245690035 / 0556141002</div>
+<h3>Advertised product categories</h3><ul><li>Parboiled Rice</li><li>Golden Morn</li><li>Milo and Milk Refill</li><li>Food Spices</li><li>Checkers Custard etc.</li></ul>
+<h3>Data Backup</h3><button class="primary" onclick="backup()">Download Backup</button> <input id="restoreFile" type="file" accept=".json" onchange="restore(event)" style="display:none"><button class="secondary" onclick="restoreFile.click()">Restore Backup</button>
+<p class="muted">Backup saves products, sales, purchases and expenses in one JSON file.</p>
+</div></section>
+</main><footer>Nyame Tumi So Enterprise • Wholesale Foodstuffs and Provisions • Kade</footer>
+
+<script>
+const KP='nts_v3_products',KS='nts_v3_sales',KPU='nts_v3_purchases',KE='nts_v3_expenses';
+let products=JSON.parse(localStorage.getItem(KP)||'null')||[
+{name:'Parboiled Rice',barcode:'100000000001',price:0,stock:0,low:5},
+{name:'Golden Morn',barcode:'100000000002',price:0,stock:0,low:5},
+{name:'Milo Refill',barcode:'100000000003',price:0,stock:0,low:5},
+{name:'Milk Refill',barcode:'100000000004',price:0,stock:0,low:5},
+{name:'Food Spices',barcode:'100000000005',price:0,stock:0,low:5},
+{name:'Checkers Custard',barcode:'100000000006',price:0,stock:0,low:5}];
+let sales=JSON.parse(localStorage.getItem(KS)||'[]'), purchases=JSON.parse(localStorage.getItem(KPU)||'[]'), expenses=JSON.parse(localStorage.getItem(KE)||'[]');
+let cart=[],editing=null;const money=n=>'GH¢'+Number(n||0).toFixed(2);
+function db(){localStorage.setItem(KP,JSON.stringify(products));localStorage.setItem(KS,JSON.stringify(sales));localStorage.setItem(KPU,JSON.stringify(purchases));localStorage.setItem(KE,JSON.stringify(expenses))}
+function page(id,b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(id==='dashboard')renderDashboard();if(id==='pos'){renderPOS();setTimeout(()=>scan.focus(),50)}if(id==='products')renderProducts();if(id==='purchases'){fillBuy();renderPurchases()}if(id==='stock')renderStock();if(id==='expenses')renderExpenses();if(id==='sales')renderSales()}
+function go(id){let b=[...document.querySelectorAll('nav button')].find(x=>x.textContent.toLowerCase().includes(id==='dashboard'?'dashboard':id));page(id,b)}
+function renderDashboard(){let today=new Date().toISOString().slice(0,10),ss=sales.filter(s=>s.date.slice(0,10)===today),ev=expenses.filter(e=>e.date.slice(0,10)===today).reduce((a,e)=>a+e.amount,0),low=products.filter(p=>p.stock<=p.low);dToday.textContent=money(ss.reduce((a,s)=>a+s.total,0));dTrans.textContent=ss.length;dProducts.textContent=products.length;dLow.textContent=low.length;dExpenses.textContent=money(ev);dLowList.innerHTML=low.map(p=>`<div class="notice warn">${esc(p.name)} — <b>${p.stock}</b> left</div>`).join('')||'<div class="empty">No low-stock products.</div>'}
+function renderPOS(){let q=scan.value.toLowerCase().trim(),l=products.filter(p=>!q||p.name.toLowerCase().includes(q)||p.barcode.includes(q));posProducts.innerHTML=l.map(p=>`<div class="product"><div class="info"><div class="name">${esc(p.name)}</div><div class="muted">Barcode: ${esc(p.barcode)} • Stock: ${p.stock}</div></div><span class="price">${p.price?money(p.price):'Set price'}</span><button class="primary" onclick="add('${p.barcode}')">Add</button></div>`).join('')||'<div class="empty">No product found.</div>';renderCart()}
+function scan(e){if(e.key==='Enter'){let p=products.find(x=>x.barcode===scan.value.trim());if(p){add(p.barcode);scan.value='';renderPOS()}else alert('Barcode not found. Add it in Products first.')}}
+function add(c){let p=products.find(x=>x.barcode===c);if(!p||p.price<=0)return alert('Set a selling price first.');if(p.stock<=0)return alert('Out of stock.');let i=cart.find(x=>x.barcode===c);if(i){if(i.qty>=p.stock)return alert('Not enough stock.');i.qty++}else cart.push({barcode:p.barcode,name:p.name,price:p.price,qty:1});renderCart()}
+function renderCart(){cartEl();let t=cart.reduce((a,i)=>a+i.price*i.qty,0);total.textContent=money(t);calcChange()}
+function cartEl(){cart.innerHTML=cart.map(i=>`<div class="cartrow"><div><b>${esc(i.name)}</b><div class="muted">${money(i.price)} each</div></div><div class="qty"><button onclick="q('${i.barcode}',-1)">−</button> ${i.qty} <button onclick="q('${i.barcode}',1)">+</button></div><b>${money(i.qty*i.price)}</b><button class="danger" onclick="rm('${i.barcode}')">×</button></div>`).join('')||'<div class="empty">No items in sale.</div>'}
+function q(c,d){let i=cart.find(x=>x.barcode===c),p=products.find(x=>x.barcode===c);i.qty+=d;if(i.qty<=0)cart=cart.filter(x=>x.barcode!==c);if(i&&i.qty>p.stock)i.qty=p.stock;renderCart()}function rm(c){cart=cart.filter(x=>x.barcode!==c);renderCart()}function clearCart(){cart=[];paid.value='';renderCart()}function calcChange(){let t=cart.reduce((a,i)=>a+i.price*i.qty,0),p=Number(paid.value||0);change.textContent=money(Math.max(0,p-t))}
+function checkout(){if(!cart.length)return alert('Cart is empty.');let t=cart.reduce((a,i)=>a+i.price*i.qty,0),p=Number(paid.value||0);if(p<t)return alert('Amount paid is less than total.');cart.forEach(i=>products.find(x=>x.barcode===i.barcode).stock-=i.qty);let s={receipt:'NTS-'+Date.now(),date:new Date().toISOString(),items:cart.map(x=>({...x})),total:t,paid:p,change:p-t};sales.unshift(s);db();printReceipt(s);clearCart();renderDashboard()}
+function printReceipt(s){let w=open('','_blank','width=420,height=720');w.document.write(`<html><head><title>${s.receipt}</title><style>body{font-family:monospace;width:360px;padding:15px}.c{text-align:center}.line{border-top:1px dashed #000;margin:9px 0}.r{display:flex;justify-content:space-between;margin:5px 0}</style></head><body><div class=c><b>NYAME TUMI SO ENTERPRISE</b><br>Wholesale Foodstuffs and Provisions<br>Kade opposite entrance of Kade station<br>0245690035 / 0556141002<br>${new Date(s.date).toLocaleString()}<br>${s.receipt}</div><div class=line></div>${s.items.map(i=>`${esc(i.name)}<br>${i.qty} x ${money(i.price)} <span style="float:right">${money(i.qty*i.price)}</span><div class=line></div>`).join('')}<div class=r><b>TOTAL</b><b>${money(s.total)}</b></div><div class=r>PAID <span>${money(s.paid)}</span></div><div class=r>CHANGE <span>${money(s.change)}</span></div><div class=line></div><div class=c>Thank you for shopping with us.</div><script>onload=()=>print()<\/script></body></html>`);w.document.close()}
+function saveProduct(){let n=pn.value.trim(),b=pb.value.trim(),p=Number(pp.value),s=Number(ps.value),lo=Number(plow.value);if(!n||!b||p<0||s<0)return alert('Complete all fields.');if(products.some(x=>x.barcode===b&&x.barcode!==editing))return alert('Barcode already exists.');if(editing){let x=products.find(y=>y.barcode===editing);Object.assign(x,{name:n,barcode:b,price:p,stock:s,low:lo})}else products.push({name:n,barcode:b,price:p,stock:s,low:lo});db();resetProduct();renderProducts();renderDashboard()}
+function renderProducts(){let q=psearch.value.toLowerCase(),l=products.filter(p=>p.name.toLowerCase().includes(q)||p.barcode.includes(q));productTable.innerHTML=`<table><tr><th>Product</th><th>Barcode</th><th>Price</th><th>Stock</th><th>Alert</th><th>Actions</th></tr>${l.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.barcode)}</td><td>${p.price?money(p.price):'Not set'}</td><td class="${p.stock<=p.low?'low':''}">${p.stock}</td><td>${p.low}</td><td><button class=secondary onclick="editP('${p.barcode}')">Edit</button> <button class=danger onclick="delP('${p.barcode}')">Delete</button></td></tr>`).join('')}</table>`}
+function editP(b){let p=products.find(x=>x.barcode===b);editing=b;pn.value=p.name;pb.value=p.barcode;pp.value=p.price;ps.value=p.stock;plow.value=p.low;scrollTo(0,0)}function delP(b){if(confirm('Delete this product?')){products=products.filter(x=>x.barcode!==b);db();renderProducts();renderDashboard()}}function resetProduct(){editing=null;pn.value='';pb.value='';pp.value='';ps.value=0;plow.value=5}
+function fillBuy(){buyProduct.innerHTML=products.map(p=>`<option value="${p.barcode}">${esc(p.name)} (${p.stock} in stock)</option>`).join('')}
+function recordPurchase(){let b=buyProduct.value,q=Number(buyQty.value),c=Number(buyCost.value||0),sup=buySupplier.value.trim();if(!b||q<=0)return alert('Select product and quantity.');products.find(p=>p.barcode===b).stock+=q;purchases.unshift({date:new Date().toISOString(),barcode:b,qty:q,cost:c,supplier:sup});db();buyQty.value='';buyCost.value='';buySupplier.value='';fillBuy();renderPurchases();renderStock();renderDashboard();alert('Stock added.')}
+function renderPurchases(){purchaseHistory.innerHTML=`<h3>Recent Purchases</h3><div class=scroll><table><tr><th>Date</th><th>Product</th><th>Qty</th><th>Supplier</th><th>Cost</th></tr>${purchases.slice(0,30).map(x=>{let p=products.find(y=>y.barcode===x.barcode);return `<tr><td>${new Date(x.date).toLocaleString()}</td><td>${esc(p?.name||x.barcode)}</td><td>${x.qty}</td><td>${esc(x.supplier||'-')}</td><td>${x.cost?money(x.cost*x.qty):'-'}</td></tr>`}).join('')}</table></div>`}
+function renderStock(){stockTable.innerHTML=`<table><tr><th>Product</th><th>Barcode</th><th>Stock</th><th>Alert Level</th><th>Status</th></tr>${products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.barcode)}</td><td>${p.stock}</td><td>${p.low}</td><td>${p.stock<=p.low?'<span class="badge warn">LOW STOCK</span>':'<span class=badge>OK</span>'}</td></tr>`).join('')}</table>`}
+function addExpense(){let d=expDesc.value.trim(),a=Number(expAmt.value);if(!d||a<=0)return alert('Enter description and amount.');expenses.unshift({date:new Date().toISOString(),description:d,amount:a});db();expDesc.value='';expAmt.value='';renderExpenses();renderDashboard()}
+function renderExpenses(){let totalE=expenses.reduce((a,e)=>a+e.amount,0);expenseTable.innerHTML=`<div class=notice>Total recorded expenses: <b>${money(totalE)}</b></div><table><tr><th>Date</th><th>Description</th><th>Amount</th></tr>${expenses.map(e=>`<tr><td>${new Date(e.date).toLocaleString()}</td><td>${esc(e.description)}</td><td>${money(e.amount)}</td></tr>`).join('')}</table>`}
+function renderSales(){let f=fromDate.value,t=toDate.value,l=sales.filter(s=>(!f||s.date.slice(0,10)>=f)&&(!t||s.date.slice(0,10)<=t)),v=l.reduce((a,s)=>a+s.total,0);salesSummary.innerHTML=`<div class=notice><b>${l.length}</b> transactions • <b>${money(v)}</b> sales value • Gross after recorded expenses: <b>${money(v-expenses.filter(e=>(!f||e.date.slice(0,10)>=f)&&(!t||e.date.slice(0,10)<=t)).reduce((a,e)=>a+e.amount,0))}</b></div>`;salesTable.innerHTML=`<table><tr><th>Receipt</th><th>Date</th><th>Items</th><th>Total</th><th>Paid</th><th>Change</th></tr>${l.map(s=>`<tr><td>${s.receipt}</td><td>${new Date(s.date).toLocaleString()}</td><td>${s.items.reduce((a,i)=>a+i.qty,0)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.change)}</td></tr>`).join('')}</table>`}
+function backup(){let data={version:3,exported:new Date().toISOString(),products,sales,purchases,expenses},a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='nyame_tumi_so_pos_backup.json';a.click()}
+function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.products||!x.sales)throw 0;products=x.products;sales=x.sales;purchases=x.purchases||[];expenses=x.expenses||[];db();alert('Backup restored.');location.reload()}catch{alert('Invalid backup file.')}};r.readAsText(f)}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function tick(){clock.textContent=new Date().toLocaleString()}setInterval(tick,1000);tick();renderDashboard();renderPOS();
+</script>
+</body></html>
